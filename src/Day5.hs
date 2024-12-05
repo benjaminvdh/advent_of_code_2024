@@ -8,7 +8,8 @@ main = solve part1 part2
 
 part1 input = let (constraints, updates) = parse input
               in (sum (map getMiddle (filter (isOrdered constraints) updates)))
-part2 _ = "N/A"
+part2 input = let (constraints, updates) = parse input
+              in (sum (map getMiddle (map (fix constraints) (filter (not . isOrdered constraints) updates))))
 
 type Constraint = (Int, Int)
 type Update = [Int]
@@ -48,3 +49,10 @@ getMiddle :: [a] -> a
 getMiddle l = let len = length l
                   index = find (\i -> i == len - (i + 1)) [0..len]
               in l !! fromJust index
+
+fix :: [Constraint] -> Update -> Update
+fix cs ps = foldr (insertPage cs) [] ps
+
+insertPage :: [Constraint] -> Int -> [Int] -> [Int]
+insertPage cs n acc@(a:as) = if all (constraintHolds (n:acc)) cs then n:acc else a:insertPage cs n as
+insertPage _ n [] = [n]
