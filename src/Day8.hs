@@ -7,7 +7,8 @@ main = solve part1 part2
 
 part1 input = let (map, size) = parse input
               in length $ nub $ filter (inside size) $ concat $ snd $ unzip $ M.toList $ fmap antinodes map
-part2 _ = "N/A"
+part2 input = let (map, size) = parse input
+              in length $ nub $ filter (inside size) $ concat $ snd $ unzip $ M.toList $ fmap (moreAntinodes size) map
 
 type Coord = (Int, Int)
 type Map = M.Map Char [Coord]
@@ -38,11 +39,28 @@ antinodes' c (other:cs) = let d = c `subCoord` other
                           in [c `addCoord` d, other `subCoord` d] ++ antinodes' c cs
 antinodes' c [] = []
 
+moreAntinodes :: (Int, Int) -> [Coord] -> [Coord]
+moreAntinodes s (c:cs) = moreAntinodes' s c cs ++ moreAntinodes s cs
+moreAntinodes _ [] = []
+
+moreAntinodes' :: (Int, Int) -> Coord -> [Coord] -> [Coord]
+moreAntinodes' s c (other:cs) = let d = c `subCoord` other
+                              in moreAntinodes'' s c d ++ moreAntinodes'' s c (negCoord d) ++ moreAntinodes' s c cs
+moreAntinodes' _ _ [] = []
+
+moreAntinodes'' :: (Int, Int) -> Coord -> Coord -> [Coord]
+moreAntinodes'' s c d
+  | inside s c = c:moreAntinodes'' s (c `addCoord` d) d
+  | otherwise = []
+
 addCoord :: Coord -> Coord -> Coord
 (ax, ay) `addCoord` (bx, by) = (ax + bx, ay + by)
 
 subCoord :: Coord -> Coord -> Coord
 (ax, ay) `subCoord` (bx, by) = (ax - bx, ay - by)
+
+negCoord :: Coord -> Coord
+negCoord (x, y) = (-x, -y)
 
 inside :: (Int, Int) -> Coord -> Bool
 inside (w, h) (x, y) = 0 <= x && x < w && 0 <= y && y < h
