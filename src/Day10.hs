@@ -8,7 +8,8 @@ main = solve part1 part2
 
 part1 input = let m = parse input
               in sum $ M.elems $ M.mapWithKey (trailheadScore m) m
-part2 _ = "N/A"
+part2 input = let m = parse input
+              in sum $ M.elems $ M.mapWithKey (trailheadRating m) m
 
 type Coord = (Int, Int)
 type Map = M.Map Coord Int
@@ -28,3 +29,16 @@ walk hPrev m (x, y) = case M.lookup (x, y) m of
                                         else [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] >>= walk h m
                                    else []
                         Nothing -> []
+
+trailheadRating :: Map -> Coord -> Int -> Int
+trailheadRating m (x, y) 0 = length $ nub $ [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] >>= paths 0 m [(x, y)]
+trailheadRating _ _ _ = 0
+
+paths :: Int -> Map -> [Coord] -> Coord -> [[Coord]]
+paths hPrev m p (x, y) = case M.lookup (x, y) m of 
+                           Just h  -> if h == hPrev + 1
+                                      then if h == 9
+                                           then [(x, y):p]
+                                           else [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] >>= paths h m ((x, y):p)
+                                      else []
+                           Nothing -> []
