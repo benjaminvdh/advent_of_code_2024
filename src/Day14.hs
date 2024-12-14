@@ -1,15 +1,29 @@
-import Solver
-
-main = solve part1 part2
-
-part1 = countQuadrants . update 100 . parse
-part2 _ = "N/A"
+import Data.List
+import Data.Maybe
+import System.Environment
+import System.IO
 
 type Coord = (Int, Int)
 type Size = Coord
 type Vel = Coord
 type Pos = Coord
 type Robot = (Pos, Vel)
+
+main = do args <- getArgs
+          input <- readFile (head args)
+          let (s, rs) = parse input
+          putStrLn ("Part 1:\n" ++ show (part1 s rs))
+          putStrLn "\nPart 2:"
+          if length args >= 2
+          then do ref <- readFile (args !! 1)
+                  putStrLn (show (part2 s rs (init ref)))
+          else do putStrLn (show "N/A")
+
+part1 :: Size -> [Robot] -> Int
+part1 s rs = countQuadrants $ update 100 (s, rs)
+
+part2 :: Size -> [Robot] -> String -> Int
+part2 s rs ref = fromJust $ find (\i -> printMap s rs i == ref) [0..]
 
 parse :: String -> (Size, [Robot])
 parse = parseSize . map parseRobot . lines
@@ -44,3 +58,7 @@ countQuadrants ((sx, sy), rs) = let mx = sx `div` 2
 
 countQuadrant :: Coord -> Coord -> [Robot] -> Int
 countQuadrant (fx, fy) (tx, ty) = length . filter (\((px, py), _) -> fx <= px && px < tx && fy <= py && py < ty)
+
+printMap :: Size -> [Robot] -> Int -> String
+printMap s@(sx, sy) rs i = let (_, rs') = update i (s, rs)
+                           in concat $ intersperse "\n" $ map (\y -> map (\x -> if any (\((px, py), _) -> px == x && py == y) rs' then '*' else ' ') [0..sx]) [0..sy]
